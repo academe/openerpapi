@@ -21,3 +21,10 @@ TODO
 * Add some handy wrappers for common objects and operations. These are likely to need extending for
   the specific requirements of different projects.
 
+Until composer.json is in, you can clone this repository to any location use this at your project level:
+
+    "autoload": {
+        "psr-4": {
+            "Academe\\OpenErpApi\\": "path/to/clone/root/src/"
+        }
+    }
