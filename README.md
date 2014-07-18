@@ -20,6 +20,7 @@ TODO
 * Take a look at the data formats returned - how much of the deep nesting is needed?
 * Add some handy wrappers for common objects and operations. These are likely to need extending for
   the specific requirements of different projects.
+* Fix the documentation in src. Move the documentation out of src first.
 
 Until composer.json is in, you can clone this repository to any location and use this at your project level:
 
