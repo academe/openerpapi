@@ -11,37 +11,38 @@ class OpenERP
     /**
      * @var 
      */
-    private $_defaultPath = '';
+    protected $_defaultPath = '';
 
     /**
      * @var 
      */
-    private $_client;
+    protected $client;
 
     /**
      * @var 
      */
-    private $_uid;
+    protected $uid;
 
     /**
      * @var 
      */
-    private $_version;
+    protected $version;
 
     /**
      * @var
      */
-    private $_db;
+    protected $db;
+
+    /**
+     * login aka username
+     * @var
+     */
+    protected $login;
 
     /**
      * @var
      */
-    private $_login;
-
-    /**
-     * @var
-     */
-    private $_password;
+    protected $password;
 
     /**
      * The entry points for the static web services.
@@ -50,6 +51,8 @@ class OpenERP
     protected $entry_points = array(
         'common' => '/xmlrpc/common',
         'object' => '/xmlrpc/object',
+        'db' => '/xmlrpc/db',
+        'report' => 'xmlrpc/report_spool',
     );
 
     /**
@@ -80,11 +83,12 @@ class OpenERP
 
         // TODO: other clients may also work, such as a JSON-RPC client, which may be
         // a little quicker.
-        $this->_client = $this->clientInstance($scheme . '://' . $host, $port, $charset);
+
+        $this->setClient($this->clientInstance($scheme . '://' . $host, $port, $charset));
     }
 
     /**
-     * @return XmlRpcClient
+     * @return XmlRpcClient New instance
      */
     public function clientInstance($uri, $port, $charset)
     {
@@ -108,11 +112,11 @@ class OpenERP
     }
 
     /**
-     * @return this
+     * @return $this
      */
-    public function setClient(XmlRpcClient $client)
+    public function setClient(XmlRpcClientInterface $client)
     {
-        $this->_client = $client;
+        $this->client = $client;
 
         return $this;
     }
@@ -122,7 +126,7 @@ class OpenERP
      */
     public function getClient()
     {
-        return $this->_client;
+        return $this->client;
     }
 
     /**
@@ -138,7 +142,15 @@ class OpenERP
      */
     public function getUid()
     {
-        return $this->_uid;
+        return $this->uid;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPassword()
+    {
+        return $this->password;
     }
 
     /**
@@ -165,9 +177,11 @@ class OpenERP
      */
     public function login($db, $login, $password)
     {
-        $this->_db = $db;
-        $this->_login = $login;
-        $this->_password = $password;
+        // Save the login details, because we will need them in subsequent calls.
+
+        $this->db = $db;
+        $this->login = $login;
+        $this->password = $password;
 
         $client = $this->setEntryPoint('common');
 
@@ -175,7 +189,7 @@ class OpenERP
         $this->throwExceptionIfFault($response);
 
         $uid = (int)$response['params']['param']['value']['int'];
-        $this->_uid = $uid;
+        $this->uid = $uid;
 
         return $uid;
     }
@@ -191,7 +205,7 @@ class OpenERP
         $this->throwExceptionIfFault($response);
 
         $version = $response['params']['param']['value']['struct']['member'][0]['value']['string'];
-        $this->_version = $version;
+        $this->version = $version;
 
         return $version;
     }
@@ -220,7 +234,7 @@ class OpenERP
     {
         $client = $this->setEntryPoint('common');
 
-        $params = array($this->_db, $this->_login, $this->_password);
+        $params = array($this->db, $this->login, $this->getPassword());
 
         $response = $client->call('timezone_get', $params);
         $this->throwExceptionIfFault($response);
@@ -237,7 +251,7 @@ class OpenERP
     {
         $client = $this->setEntryPoint('object');
 
-        $params = array($this->_db, $this->getUid(), $this->_password, $model, 'create', $data);
+        $params = array($this->db, $this->getUid(), $this->getPassword(), $model, 'create', $data);
 
         $response = $client->call('execute', $params);
         $this->throwExceptionIfFault($response);
@@ -256,7 +270,7 @@ class OpenERP
     {
         $client = $this->setEntryPoint('object');
 
-        $params = array($this->_db, $this->getUid(), $this->_password, $model, 'search', $data, $offset, $limit);
+        $params = array($this->db, $this->getUid(), $this->getPassword(), $model, 'search', $data, $offset, $limit);
 
         $response = $client->call('execute', $params);
         $this->throwExceptionIfFault($response);
@@ -287,7 +301,7 @@ class OpenERP
     {
         $client = $this->setEntryPoint('object');
 
-        $params = array($this->_db, $this->getUid(), $this->_password, $model, 'read', $ids, $fields);
+        $params = array($this->db, $this->getUid(), $this->getPassword(), $model, 'read', $ids, $fields);
 
         $response = $client->call('execute', $params);
         $this->throwExceptionIfFault($response);
@@ -338,7 +352,7 @@ class OpenERP
     {
         $client = $this->setEntryPoint('object');
 
-        $params = array($this->_db, $this->getUid(), $this->_password, $model, 'write', $ids, $fields);
+        $params = array($this->db, $this->getUid(), $this->getPassword(), $model, 'write', $ids, $fields);
 
         $response = $client->call('execute', $params);
         $this->throwExceptionIfFault($response);
@@ -357,7 +371,7 @@ class OpenERP
     {
         $client = $this->setEntryPoint('object');
 
-        $params = array($this->_db, $this->getUid(), $this->_password, $model, 'write', $ids);
+        $params = array($this->db, $this->getUid(), $this->getPassword(), $model, 'write', $ids);
 
         $response = $client->call('execute', $params);
         $this->throwExceptionIfFault($response);
