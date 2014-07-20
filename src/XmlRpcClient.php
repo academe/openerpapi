@@ -7,9 +7,14 @@ namespace Academe\OpenErpApi;
  * @package Simbigo\OpenERP
  * @todo Create an interface for use by multiple clients.
  */
-class XmlRpcClient implements XmlRpcClientInterface
+class XmlRpcClient implements RpcClientInterface
 {
-	/**
+    /**
+     * @var 
+     */
+    protected $defaultPath = '';
+
+    /**
      * @var string
      */
     public $userAgent = 'Simbigo XML-RPC Client';
@@ -37,21 +42,41 @@ class XmlRpcClient implements XmlRpcClientInterface
     /**
      * @var
      */
-    private $_lastRawResponse;
+    private $lastRawResponse;
 
     /**
      * @var
      */
-    private $_lastRequest;
+    private $lastRequest;
 
     /**
      * @param $host
      * @param int $port
      * @param string $charset
      */
-    public function __construct($host, $port = 80, $charset = 'utf-8')
+    public function __construct($host, $port = 8069, $charset = 'utf-8')
     {
-        $this->setHost($host);
+        $urlInfo = parse_url($host);
+        $scheme = $urlInfo['scheme'];
+        $host = $urlInfo['host'];
+        $port = isset($urlInfo['port']) ? $urlInfo['port'] : $port;
+
+        $path = isset($urlInfo['path']) ? $urlInfo['path'] : null;
+
+        // If the path is "xmlrpc" then strip it off - we will be adding it
+        // in each entry point path. If the path is not "xmlrpc" then assume
+        // OpenERP is install on a a non-root path, so keep it.
+        // CHECKME: if the path is "/myinstance/xmlrpc" then we probably need to
+        // strip "xmlrpc" from the end.
+        // However, defaultPath is not actually used anywhere, so it's a moot.
+
+        if ($path !== null && trim($path, '/') != 'xmlrpc') {
+            $this->defaultPath = rtrim($path, '/');
+        } else {
+            $this->defaultPath = '';
+        }
+
+        $this->setHost($scheme . '://' . $host);
         $this->setPort($port);
         $this->setCharset($charset);
     }
@@ -125,7 +150,7 @@ class XmlRpcClient implements XmlRpcClientInterface
      */
     public function getLastResponse()
     {
-        return $this->_lastRawResponse;
+        return $this->lastRawResponse;
     }
 
     /**
@@ -133,7 +158,7 @@ class XmlRpcClient implements XmlRpcClientInterface
      */
     public function getLastRequest()
     {
-        return $this->_lastRequest;
+        return $this->lastRequest;
     }
 
     /**
@@ -154,7 +179,7 @@ class XmlRpcClient implements XmlRpcClientInterface
             $payload = $this->encodeRequest($method, $params);
         }
 
-        $this->_lastRequest = $payload;
+        $this->lastRequest = $payload;
 
         $context = stream_context_create(array(
             'http' => array(
@@ -165,9 +190,10 @@ class XmlRpcClient implements XmlRpcClientInterface
         ));
 
         $uri = $this->getHost() . ':' . $this->getPort() . $this->getPath();
+
         $xml = file_get_contents($uri, false, $context);
 
-        $this->_lastRawResponse = $xml;
+        $this->lastRawResponse = $xml;
 
         $response = new \SimpleXMLElement($xml);
 

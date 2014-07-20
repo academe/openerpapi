@@ -7,6 +7,6 @@ namespace Academe\OpenErpApi;
  * @package Simbigo\OpenERP
  * @todo Create an interface for use by multiple clients.
  */
-interface XmlRpcClientInterface
+interface RpcClientInterface
 {
 }
