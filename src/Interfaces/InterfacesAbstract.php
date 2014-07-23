@@ -8,7 +8,7 @@ use Academe\OpenErpApi;
  * 
  * @package 
  */
-abstract class InterfacesAbstract
+abstract class InterfacesAbstract implements InterfacesInterface
 {
     /**
      * The OpenERP API connection.
