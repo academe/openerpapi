@@ -160,10 +160,12 @@ class Object extends InterfacesAbstract
 
     /**
      * Read by external IDs (rather than internal IDs).
+     * We go external_ids->ir_ids->rec_ids->model records
      * @param $model
      * @param $ids database IDs
      * @param array $fields
      * @return array
+     * @todo Split this up: (1) fetch the external_id/model_db_id mapping; then (2) fetch the resoruce models.
      */
     public function readExternal($model, $ids, $fields = array())
     {
@@ -209,9 +211,6 @@ class Object extends InterfacesAbstract
         // If there are more than one module, then OR them together; precede them with
         // number-of-modules OR operators minus one.
 
-        //for($i = count($modules); $i > 1; $i--) {
-        //    $ir_criteria[] = '|';
-        //}
         if (count($modules) > 1) {
             $ir_criteria = array_merge($ir_criteria, array_pad(array(), count($modules) - 1, '|'));
         }
@@ -226,7 +225,7 @@ class Object extends InterfacesAbstract
         // Fetch all the IR IDs.
         $ir_ids = $this->search($this->ir_model_data, $ir_criteria, $offset, $limit);
 
-        // Get the list of source model records from the IR model data - these are the external IDs for the data.
+        // Get the list of source model records from the IR model data.
         $ir_records = $this->read($this->ir_model_data, $ir_ids);
 
         // Get the resource model IDs.
