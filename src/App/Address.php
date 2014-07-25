@@ -21,6 +21,7 @@ class Address extends Interfaces\Object
     public function getStateList()
     {
         // The returned country_id contains the country name and its database ID (not external ID).
+        // To get the country external ID, a further lookup via getCountryList() would be needed.
 
         return $this->getAllExternal('res.country.state', array('code', 'country_id'));
     }

@@ -256,7 +256,7 @@ class XmlRpcClient implements RpcClientInterface
                 break;
 
             case 'string':
-                $encoded = '<value><string>' . $param . '</string></value>' . "\r\n";
+                $encoded = '<value><string>' . htmlspecialchars($param) . '</string></value>' . "\r\n";
                 break;
 
             case 'array':

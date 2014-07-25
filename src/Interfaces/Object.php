@@ -16,6 +16,11 @@ class Object extends InterfacesAbstract
     protected $service = 'object';
 
     /**
+     * The model where the IR (external IDs) is stored.
+     */
+    protected $ir_model_data = 'ir.model.data';
+
+    /**
      * @param $model
      * @param $data
      * @return int
@@ -68,15 +73,25 @@ class Object extends InterfacesAbstract
 
         $response = $response['params']['param']['value']['array']['data'];
 
-        if (!isset($response['value'])) {
+        if ( ! isset($response['value'])) {
             return array();
         }
 
         $ids = array();
         $response = $response['value'];
 
-        foreach ($response as $value) {
-            $ids[] = (int)$value['int'];
+        // Another example of the returned structure being slightly different when
+        // a single match is returned, compared to multiple matches.
+        // I love these traps that leave us scratching our heads for hours. Why a
+        // set of one record should be handled differently than a set of two records,
+        // I will never know.
+
+        if (count($response) == 1) {
+            $ids[] = (int)$response['int'];
+        } else {
+            foreach ($response as $value) {
+                $ids[] = (int)$value['int'];
+            }
         }
 
         return $ids;
@@ -84,7 +99,7 @@ class Object extends InterfacesAbstract
 
     /**
      * @param $model
-     * @param $ids
+     * @param $ids database IDs
      * @param array $fields
      * @return array
      */
@@ -141,6 +156,90 @@ class Object extends InterfacesAbstract
         }
 
         return $records;
+    }
+
+    /**
+     * Read by external IDs (rather than internal IDs).
+     * @param $model
+     * @param $ids database IDs
+     * @param array $fields
+     * @return array
+     */
+    public function readExternal($model, $ids, $fields = array())
+    {
+        // Get all records.
+        $offset = 0;
+        $limit = 0;
+
+        // Get the basic criteria.
+        // The localisation will be set to the current user's localisation.
+
+        $ir_criteria = array(
+            array('model', '=', $model),
+            //array('complete_name', 'in', $ids),
+        );
+
+        // To search, we need to split the complete names into modules and names.
+        $modules = array();
+        foreach($ids as $id) {
+            $id_parts = explode('.', $id, 2);
+            if (count($id_parts) == 2) {
+                // Two parts.
+                list($module, $name) = $id_parts;
+            } else {
+                // One part.
+                $module = '';
+                $name = $id;
+            }
+
+            if ( ! isset($modules[$module])) {
+                $modules[$module] = array();
+            }
+
+            $modules[$module][] = $name;
+        }
+
+        // There could be one or more modules in the criteria list.
+        // This question asks if we can search for all modules at once, or need to
+        // do separate searches for each and merge the results:
+        // https://openerp.my.openerp.com/forum/help-1/question/xml-rpc-api-object-search-mixing-and-and-or-58468
+        // It seems we can use polish notation.
+
+        // Polish notation.
+        // If there are more than one module, then OR them together; precede them with
+        // number-of-modules OR operators minus one.
+
+        //for($i = count($modules); $i > 1; $i--) {
+        //    $ir_criteria[] = '|';
+        //}
+        if (count($modules) > 1) {
+            $ir_criteria = array_merge($ir_criteria, array_pad(array(), count($modules) - 1, '|'));
+        }
+
+        foreach($modules as $module => $names) {
+            // Polish notation: make sure the following two operations are ANDed, before they are ORed.
+            $ir_criteria[] = '&';
+            $ir_criteria[] = array('module', '=', $module);
+            $ir_criteria[] = array('name', 'in', $names);
+        }
+
+        // Fetch all the IR IDs.
+        $ir_ids = $this->search($this->ir_model_data, $ir_criteria, $offset, $limit);
+
+        // Get the list of source model records from the IR model data - these are the external IDs for the data.
+        $ir_records = $this->read($this->ir_model_data, $ir_ids);
+
+        // Get the resource model IDs.
+        $res_ids = array();
+        foreach($ir_records as $ir_field) {
+            $res_ids[] = $ir_field['res_id'];
+        }
+
+        // Now do a standard read with the resource IDs we have found.
+        // However, we probably need to inject the external IDs back into the results,
+        // otherwise we will never know which record is which.
+
+        return $this->read($model, $res_ids, $fields);
     }
 
     /**
@@ -222,8 +321,6 @@ class Object extends InterfacesAbstract
         $offset = 0;
         $limit = 0;
 
-        $ir_model_data = 'ir.model.data';
-
         // Get the basic criteria.
         // The localisation will be set to the current user's localisation.
 
@@ -231,7 +328,7 @@ class Object extends InterfacesAbstract
             array('model', '=', $model_name),
         );
 
-        $ir_ids = $this->search($ir_model_data, $ir_criteria, $offset, $limit);
+        $ir_ids = $this->search($this->ir_model_data, $ir_criteria, $offset, $limit);
 
         $ir_field_list = array(
             // The record data from the module.
