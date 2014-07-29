@@ -211,6 +211,9 @@ class Connection implements ConnectionInterface
                 }
             }
 
+            // There is also a full stack track available, and since OpenERP API has very little
+            // validation against what you are trying to do, stack dumps are a very common result
+            // of data errors, unfortunately.
             throw new \Exception($faultString, $faultCode);
         }
     }
