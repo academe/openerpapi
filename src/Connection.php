@@ -135,9 +135,9 @@ class Connection implements ConnectionInterface
     /**
      * @return mixed
      */
-    public function getLoggedIn()
+    public function isLoggedIn()
     {
-        return $this->logged_in;
+        return !empty($this->logged_in);
     }
 
     /**

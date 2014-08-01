@@ -22,5 +22,27 @@ class Partner extends Interfaces\Object
     {
         return $this->getAllExternal('res.partner.title');
     }
+
+    /**
+     * Get all invoices for a partner.
+     * We probably need a more consistent way of specifying fields and search criteria
+     * across similar methods.
+     */
+    public function getInvoices($partner_id)
+    {
+        $model = 'account.invoice';
+
+        // Get all the partner invoice IDs.
+        $ids = $this->search($model, array(array('partner_id', '=', (int)$partner_id)));
+
+        // Now get the invoices.
+        if (!empty($ids)) {
+            $invoices = $this->read($model, $ids);
+        } else {
+            $invoices = array();
+        }
+
+        return $invoices;
+    }
 }
 

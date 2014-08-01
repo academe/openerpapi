@@ -58,7 +58,7 @@ class Object extends InterfacesAbstract
 
     /**
      * @param $model
-     * @param $data
+     * @param $data array of terms
      * @param int $offset
      * @param int $limit
      * @return array
@@ -116,8 +116,17 @@ class Object extends InterfacesAbstract
      */
     public function read($model, $ids, $fields = array())
     {
+        // If not logged in, then log in automatically (use the DIC to get access to common/login).
+        // Dp this first, as the entry point could get changed if logging in.
+        $this->checkLogin();
+
         $client = $this->connection->getClient();
         $client->setPath($this->connection->getEntryPoint($this->service));
+
+        // In case a single ID has been passed in.
+        if ( ! is_array($ids)) {
+            $ids = array($ids);
+        }
 
         $params = array(
             $this->connection->getDb(),
@@ -490,14 +499,18 @@ class Object extends InterfacesAbstract
      * @todo Catch exception "No such external ID currently defined in the system".
      * There is also a get_object() method that may provide more detail, saving a second call to get the record.
      */
-    public function getObjectReference($external_id)
+    public function getObjectReference($external_id_or_module, $xml_id = null)
     {
         $client = $this->connection->getClient();
         $client->setPath($this->connection->getEntryPoint($this->service));
 
         $model_name = 'ir.model.data';
 
-        list($module, $name) = $this->splitExternalId($external_id);
+        if ( ! isset($xml_id)) {
+            list($module, $xml_id) = $this->splitExternalId($external_id_or_module);
+        } else {
+            $module = $external_id_or_module;
+        }
 
         $params = array(
             $this->connection->getDb(),
@@ -506,7 +519,7 @@ class Object extends InterfacesAbstract
             $model_name,
             'get_object_reference',
             $module,
-            $name
+            $xml_id,
         );
 
         $response = $client->call('execute', $params);
@@ -522,7 +535,7 @@ class Object extends InterfacesAbstract
         $model = $response[0]['string'];
         $id = $response[1]['int'];
 
-        return array('model' => $model, 'id' => $id);
+        return array('model' => $model, 'id' => (int)$id);
     }
 
     /**
