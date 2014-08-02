@@ -11,7 +11,8 @@ Initial changes were:
 * PHP5.3 compatibility. The original was PHP5.4, but for no functional reason - just the array declaration format.
 * Change of namespace to Academe\OpenErpApi (just so the old and new libraries can be run together if needed).
 
-Now the Pimple DIC is being used to manage DI within this package.
+Now the Pimple DIC is being used to manage DI within this package. It makes it easier to use - you
+throw some parameters in, and the DIC handles instantiation and dependancies.
 
 Examples
 ========
