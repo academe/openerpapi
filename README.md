@@ -28,7 +28,7 @@ Here is a simple example to read a partner record:
     
     // Point to the OpenERP installation at example.com
     // Here you can also set a different port and characterset from the default.
-    $openerp->setClientUri('http://example.com/');
+    $openerp->setClientParams('http://example.com/');
     
     // Set the application database/username/password to access the application.
     $openerp->setCredentials($database, $username, $password);
