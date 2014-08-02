@@ -198,6 +198,9 @@ class Object extends InterfacesAbstract
         );
 
         // To search, we need to split the complete names into modules and names.
+        // There may be a mix of different modules, and that needs some clever
+        // handling later.
+
         $modules = array();
         foreach($ids as $id) {
             $id_parts = explode('.', $id, 2);
