@@ -56,29 +56,46 @@ class XmlRpcClient implements RpcClientInterface
      */
     public function __construct($host, $port = 8069, $charset = 'utf-8')
     {
-        $urlInfo = parse_url($host);
-        $scheme = $urlInfo['scheme'];
-        $host = $urlInfo['host'];
-        $port = isset($urlInfo['port']) ? $urlInfo['port'] : $port;
+        $this->setParams($host, $port, $charset);
+    }
 
-        $path = isset($urlInfo['path']) ? $urlInfo['path'] : null;
+    /**
+     * Set all paramters in one go.
+     */
+    public function setParams($host = null, $port = null, $charset = null)
+    {
+        if (isset($host)) {
+            $urlInfo = parse_url($host);
 
-        // If the path is "xmlrpc" then strip it off - we will be adding it
-        // in each entry point path. If the path is not "xmlrpc" then assume
-        // OpenERP is install on a a non-root path, so keep it.
-        // CHECKME: if the path is "/myinstance/xmlrpc" then we probably need to
-        // strip "xmlrpc" from the end.
-        // However, defaultPath is not actually used anywhere, so it's a moot.
+            $scheme = $urlInfo['scheme'];
+            $host = $urlInfo['host'];
+            $port = isset($urlInfo['port']) ? $urlInfo['port'] : (isset($port) ? $port : '8069');
 
-        if ($path !== null && trim($path, '/') != 'xmlrpc') {
-            $this->defaultPath = rtrim($path, '/');
-        } else {
-            $this->defaultPath = '';
+            $path = isset($urlInfo['path']) ? $urlInfo['path'] : null;
+
+            // If the path is "xmlrpc" then strip it off - we will be adding it
+            // in each entry point path. If the path is not "xmlrpc" then assume
+            // OpenERP is install on a a non-root path, so keep it.
+            // CHECKME: if the path is "/myinstance/xmlrpc" then we probably need to
+            // strip "xmlrpc" from the end.
+            // However, defaultPath is not actually used anywhere, so it's a moot.
+
+            if ($path !== null && trim($path, '/') != 'xmlrpc') {
+                $this->defaultPath = rtrim($path, '/');
+            } else {
+                $this->defaultPath = '';
+            }
+
+            $this->setHost($scheme . '://' . $host);
         }
 
-        $this->setHost($scheme . '://' . $host);
-        $this->setPort($port);
-        $this->setCharset($charset);
+        if (isset($port)) {
+            $this->setPort($port);
+        }
+
+        if (isset($charset)) {
+            $this->setCharset($charset);
+        }
     }
 
     /**

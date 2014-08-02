@@ -60,7 +60,7 @@ class Connection implements ConnectionInterface
      * @param string $charset
      * @todo initialise with the client object interface
      */
-    public function __construct(RpcClientInterface $client)
+    public function __construct(RpcClientInterface $client, $database = null, $username = null, $password = null)
     {
         $this->setClient($client);
     }

@@ -7,7 +7,8 @@ use Pimple\Container;
 /**
  * Class OpenERP
  * @package 
- * @todo This will probably just end up the object factory/locator.
+ * @todo The lazy-loading parameters - are they just a silly idea here? They only work when
+ * the parameters are set before loading any objects.
  */
 class OpenErp
 {
@@ -27,6 +28,7 @@ class OpenErp
         $this->container = new Container();
 
         // The client service name and some default parameters.
+        $this->container['client_base_uri'] = '';
         $this->container['client_class'] = __NAMESPACE__ . '\\XmlRpcClient';
         $this->container['client_charset'] = 'utf-8';
         $this->container['client_port'] = '8069';
@@ -36,12 +38,18 @@ class OpenErp
             return new $c['client_class']($c['client_base_uri'], $c['client_port'], $c['client_charset']);
         };
 
-        // The shared connection service name.
+        // The shared connection service name and parameters.
         $this->container['connection_class'] = __NAMESPACE__ . '\\Connection';
+        $this->container['connection_database'] = null;
+        $this->container['connection_username'] = null;
+        $this->container['connection_password'] = null;
 
         // The shared connection service.
         $this->container['connection'] = function ($c) {
-            return new $c['connection_class']($c['client']);
+            $connection = new $c['connection_class']($c['client']);
+            $connection->setCredentials($c['connection_database'], $c['connection_username'], $c['connection_password']);
+
+            return $connection;
         };
 
         // The various interface services.
@@ -71,36 +79,13 @@ class OpenErp
     }
 
     /**
-     * Set the client base URI.
-     * @todo If the client is already instantiated, then do we need to set its URL directly?
-     * It is useless setting the DIC parameters at that point, because it won't be instantiated
-     * again.
+     * Set the client parameters.
      */
-    public function setClientUri($service_base_uri)
+    public function setClientParams($service_base_uri = null, $port = null, $charset = null)
     {
-        $this->container['client_base_uri'] = $service_base_uri;
-
-        return $this;
-    }
-
-    /**
-     * Set the client port.
-     */
-    public function setClientPort($port)
-    {
-        $this->container['client_port'] = $port;
-
-        return $this;
-    }
-
-    /**
-     * Set the client characterset.
-     */
-    public function setClientCharset($charset)
-    {
-        $this->container['client_charset'] = $charset;
-
-        return $this;
+        if (isset($service_base_uri)) $this->container['client_base_uri'] = $service_base_uri;
+        if (isset($port)) $this->container['client_port'] = $port;
+        if (isset($charset)) $this->container['client_charset'] = $charset;
     }
 
     /**
@@ -109,19 +94,40 @@ class OpenErp
      */
     public function getClient($service_base_uri = null, $port = null, $charset = null)
     {
-        if (isset($service_base_uri)) $this->setClientUri($service_base_uri);
-        if (isset($port)) $this->setClientPort($port);
-        if (isset($charset)) $this->setClientCharset($charset);
+        // Set lazy-loading parameters.
+        $this->setClientParams($service_base_uri, $port, $charset);
 
-        return $this->container['client'];
+        // Get the client from the DIC.
+        $client = $this->container['client'];
+
+        // Set the container parameters directly in case it was already instantiated
+        // and the parameters have changed.
+        // TODO: some more thought needed here, to prevent the same thing being done
+        // multiple times.
+        $client->setParams($service_base_uri, $port, $charset);
+
+        return $client;
     }
 
     /**
      * Return the connection service.
+     * Allow login credentials to be set of changed here.
+     * All null credentials will be skipped at all levels, so null will never
+     * overwite a credential already set.
      */
-    public function getConnection()
+    public function getConnection($database = null, $username = null, $password = null)
     {
-        return $this->container['connection'];
+        // Set any lazy-loading credentials.
+        // Even if already instantiated, thet are handy for reference.
+        $this->setCredentials($database, $username, $password);
+
+        // Get the connection object from the DIC.
+        $connection = $this->container['connection'];
+
+        // Overide any credentials in the DIC connection object.
+        $connection->setCredentials($database, $username, $password);
+
+        return $connection;
     }
 
     /**
@@ -131,21 +137,25 @@ class OpenErp
     public function getInterface($name)
     {
         // Pass the DIC into the interface, so it has access to common/login if it needs it.
+        $interface_name = 'interface_' . strtolower($name);
 
         return $this
-            ->container['interface_' . strtolower($name)]
+            ->container[$interface_name]
             ->setContainer($this->container);
     }
 
     /**
-     * Set the connection credentials.
+     * Set the connection credentials (lazy-loaded parameters).
+     * @fixme This does not affect the connection if already instantiated.
+     * Maybe we just make this method protected?
      */
     public function setCredentials($database, $username, $password)
     {
-        // The credentials are set directly on the connection, which is
-        // instantiated if necessary.
+        // The credentials are set in the DIC for lazy-loading.
 
-        $this->getConnection()->setCredentials($database, $username, $password);
+        if ( isset($database)) $this->container['connection_database'] = $database;
+        if ( isset($username)) $this->container['connection_username'] = $username;
+        if ( isset($password)) $this->container['connection_password'] = $password;
 
         return $this;
     }
