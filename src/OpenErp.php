@@ -72,6 +72,9 @@ class OpenErp
 
     /**
      * Set the client base URI.
+     * @todo If the client is already instantiated, then do we need to set its URL directly?
+     * It is useless setting the DIC parameters at that point, because it won't be instantiated
+     * again.
      */
     public function setClientUri($service_base_uri)
     {
@@ -123,10 +126,11 @@ class OpenErp
 
     /**
      * Return an interface service.
+     * Services are: "common", "object", "db", "report".
      */
     public function getInterface($name)
     {
-        // TODO: pass the DIC into the interface, so it has access to common/login if it needs it.
+        // Pass the DIC into the interface, so it has access to common/login if it needs it.
 
         return $this
             ->container['interface_' . strtolower($name)]
