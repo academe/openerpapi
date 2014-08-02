@@ -40,6 +40,14 @@ abstract class InterfacesAbstract implements InterfacesInterface
     }
 
     /**
+     * Get the DIC container
+     */
+    public function getContainer(Container $container)
+    {
+        return $this->container;
+    }
+
+    /**
      * Log in if not already logged in.
      */
     public function checkLogin()

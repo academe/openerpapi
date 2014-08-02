@@ -20,6 +20,22 @@ class OpenErp
     protected $container;
 
     /**
+     * Some definitions.
+     */
+
+    const DEFAULT_CHARSET = 'utf-8';
+    const DEFAULT_PORT = '8069';
+
+    const CLIENT_CLASS = 'Academe\\OpenErpApi\\XmlRpcClient';
+    const CONNECTION_CLASS = 'Academe\\OpenErpApi\\Connection';
+
+    // Note Interfaces is plural because Interface is a reserved word.
+    const INTERFACE_COMMON_CLASS = 'Academe\\OpenErpApi\\Interfaces\\Common';
+    const INTERFACE_OBJECT_CLASS = 'Academe\\OpenErpApi\\Interfaces\\Object';
+    const INTERFACE_DB_CLASS = 'Academe\\OpenErpApi\\Interfaces\\Db';
+    const INTERFACE_REPORT_CLASS = 'Academe\\OpenErpApi\\Interfaces\\Report';
+
+    /**
      * Constructor.
      */
     public function __construct()
@@ -29,9 +45,9 @@ class OpenErp
 
         // The client service name and some default parameters.
         $this->container['client_base_uri'] = '';
-        $this->container['client_class'] = __NAMESPACE__ . '\\XmlRpcClient';
-        $this->container['client_charset'] = 'utf-8';
-        $this->container['client_port'] = '8069';
+        $this->container['client_class'] = static::CLIENT_CLASS;
+        $this->container['client_charset'] = static::DEFAULT_CHARSET;
+        $this->container['client_port'] = static::DEFAULT_PORT;
 
         // The shared client service.
         $this->container['client'] = function ($c) {
@@ -39,7 +55,7 @@ class OpenErp
         };
 
         // The shared connection service name and parameters.
-        $this->container['connection_class'] = __NAMESPACE__ . '\\Connection';
+        $this->container['connection_class'] = static::CONNECTION_CLASS;
         $this->container['connection_database'] = null;
         $this->container['connection_username'] = null;
         $this->container['connection_password'] = null;
@@ -54,10 +70,10 @@ class OpenErp
 
         // The various interface services.
 
-        $this->container['interface_common_class'] = __NAMESPACE__ . '\\Interfaces\\Common';
-        $this->container['interface_object_class'] = __NAMESPACE__ . '\\Interfaces\\Object';
-        $this->container['interface_db_class'] = __NAMESPACE__ . '\\Interfaces\\Db';
-        $this->container['interface_report_class'] = __NAMESPACE__ . '\\Interfaces\\Report';
+        $this->container['interface_common_class'] = static::INTERFACE_COMMON_CLASS;
+        $this->container['interface_object_class'] = static::INTERFACE_OBJECT_CLASS;
+        $this->container['interface_db_class'] = static::INTERFACE_DB_CLASS;
+        $this->container['interface_report_class'] = static::INTERFACE_REPORT_CLASS;
 
         // TODO: can these be gerated in a loop?
 

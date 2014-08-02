@@ -32,26 +32,57 @@ class Object extends InterfacesAbstract
     protected $limit_all = 0;
 
     /**
-     * @param $model
-     * @param $data
-     * @return int
+     * Execute a remote method in a model.
+     * @param $model string The name of the model.
+     * @param $method string The method to call.
+     * @param mixed Additional parameters that will be passed to the method as positional parameters.
      */
-    public function create($model, $data)
+    public function execute($model, $method)
     {
+        // If not logged in, then log in automatically (use the DIC to get access to common/login).
+        // Dp this first, before setting the service entry point as the entry point could get changed
+        // if logging in.
+
+        $this->checkLogin();
+
+        // Get the connection client.
+
         $client = $this->connection->getClient();
         $client->setPath($this->connection->getEntryPoint($this->service));
+
+        // Set the common parameters.
 
         $params = array(
             $this->connection->getDb(),
             $this->connection->getUid(),
             $this->connection->getPassword(),
             $model,
-            'create',
-            $data
+            $method,
         );
 
+        // Append any additional parameters passed to this method.
+        if (func_num_args() > 2) {
+            $params = array_merge($params, array_slice(func_get_args(), 2));
+        }
+
+        // Call the remote system.
         $response = $client->call('execute', $params);
-        $this->throwExceptionIfFault($response);
+
+        // Turn any errors returned by the remote call into exceptions.
+        // We may not always want to do this, so we'll keep an eye on it.
+        $this->connection->throwExceptionIfFault($response);
+
+        return $response;
+    }
+
+    /**
+     * @param $model
+     * @param $data
+     * @return int
+     */
+    public function create($model, $data)
+    {
+        $response = $this->execute($model, 'create', $data);
 
         return (int)$response['params']['param']['value']['int'];
     }
@@ -65,22 +96,7 @@ class Object extends InterfacesAbstract
      */
     public function search($model, $data, $offset = 0, $limit = 1000)
     {
-        $client = $this->connection->getClient();
-        $client->setPath($this->connection->getEntryPoint($this->service));
-
-        $params = array(
-            $this->connection->getDb(),
-            $this->connection->getUid(),
-            $this->connection->getPassword(),
-            $model,
-            'search',
-            $data,
-            $offset,
-            $limit
-        );
-
-        $response = $client->call('execute', $params);
-        $this->connection->throwExceptionIfFault($response);
+        $response = $this->execute($model, 'search', $data, $offset, $limit);
 
         $response = $response['params']['param']['value']['array']['data'];
 
@@ -116,30 +132,12 @@ class Object extends InterfacesAbstract
      */
     public function read($model, $ids, $fields = array())
     {
-        // If not logged in, then log in automatically (use the DIC to get access to common/login).
-        // Dp this first, as the entry point could get changed if logging in.
-        $this->checkLogin();
-
-        $client = $this->connection->getClient();
-        $client->setPath($this->connection->getEntryPoint($this->service));
-
         // In case a single ID has been passed in.
         if ( ! is_array($ids)) {
             $ids = array($ids);
         }
 
-        $params = array(
-            $this->connection->getDb(),
-            $this->connection->getUid(),
-            $this->connection->getPassword(),
-            $model,
-            'read',
-            $ids,
-            $fields
-        );
-
-        $response = $client->call('execute', $params);
-        $this->connection->throwExceptionIfFault($response);
+        $response = $this->execute($model, 'read', $ids, $fields);
 
         $response = $response['params']['param']['value']['array']['data'];
 
@@ -269,21 +267,7 @@ class Object extends InterfacesAbstract
      */
     public function write($model, $ids, $fields)
     {
-        $client = $this->connection->getClient();
-        $client->setPath($this->connection->getEntryPoint($this->service));
-
-        $params = array(
-            $this->connection->getDb(),
-            $this->connection->getUid(),
-            $this->connection->getPassword(),
-            $model,
-            'write',
-            $ids,
-            $fields
-        );
-
-        $response = $client->call('execute', $params);
-        $this->connection->throwExceptionIfFault($response);
+        $response = $this->execute($model, 'write', $ids, $fields);
 
         $response = (bool)$response['params']['param']['value']['boolean'];
 
@@ -297,19 +281,7 @@ class Object extends InterfacesAbstract
      */
     public function unlink($model, $ids)
     {
-        $client = $this->setEntryPoint('object');
-
-        $params = array(
-            $this->connection->getDb(),
-            $this->connection->getUid(),
-            $this->connection->getPassword(),
-            $model,
-            'write',
-            $ids
-        );
-
-        $response = $client->call('execute', $params);
-        $this->connection->throwExceptionIfFault($response);
+        $response = $this->execute($model, 'unlink', $ids);
 
         $response = (bool)$response['params']['param']['value']['boolean'];
 
@@ -504,9 +476,6 @@ class Object extends InterfacesAbstract
      */
     public function getObjectReference($external_id_or_module, $xml_id = null)
     {
-        $client = $this->connection->getClient();
-        $client->setPath($this->connection->getEntryPoint($this->service));
-
         $model_name = 'ir.model.data';
 
         if ( ! isset($xml_id)) {
@@ -515,18 +484,7 @@ class Object extends InterfacesAbstract
             $module = $external_id_or_module;
         }
 
-        $params = array(
-            $this->connection->getDb(),
-            $this->connection->getUid(),
-            $this->connection->getPassword(),
-            $model_name,
-            'get_object_reference',
-            $module,
-            $xml_id,
-        );
-
-        $response = $client->call('execute', $params);
-        $this->connection->throwExceptionIfFault($response);
+        $response = $this->execute($model, 'get_object_reference', $module, $xml_id);
 
         // There are an awful lot of assumptions made here in terms of the data structure
         // that is returned. There has to be a better way to handle it.
