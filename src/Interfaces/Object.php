@@ -139,41 +139,9 @@ class Object extends InterfacesAbstract
 
         $response = $this->execute($model, 'read', $ids, $fields);
 
-        $response = $response['params']['param']['value']['array']['data'];
+        // TODO: We might want to re-index the records by 'id' to be more useful.
 
-        if (!isset($response['value'])) {
-            return array();
-        }
-        $records = array();
-
-        // When only one item is fetched the value of result is a associative array.
-        // As a result records will be an array with length 1 with an empty array inside.
-        // The following check fixes the issue.
-
-        if (count($ids) === 1) {
-            $response = array($response['value']);
-        } else {
-            $response = $response['value'];
-        }
-
-        foreach ($response as $item) {
-            $record = array();
-            $recordItems = $item['struct']['member'];
-
-            // Convert from ['name'=>'foo','value'=>'bar'] pairs to an associate array of 'foo'=>'bar' elements.
-            // Similar treatment may be needed recursively into the record.
-
-            foreach ($recordItems as $recordItem) {
-                $key = $recordItem['name'];
-                $value = current($recordItem['value']);
-                $record[$key] = $value;
-            }
-
-            // TODO: it can be helpful to optionally index the array by the row IDs or codes.
-            $records[] = $record;
-        }
-
-        return $records;
+        return $response;
     }
 
     /**
@@ -497,6 +465,31 @@ class Object extends InterfacesAbstract
         $id = $response[1]['int'];
 
         return array('model' => $model, 'id' => (int)$id);
+    }
+
+    /**
+     * Fetch a list of lookup values for a field in a model.
+     * Generally used for auto-complete functions.
+     */
+    public function distinctFieldGet($model, $field, $value, $args = null, $offset = 0, $limit = null)
+    {
+        $response = $this->execute($model, 'distinct_field_get', $field, $value, $args, $offset, $limit);
+
+        // TODO: enormous long structure to parse here.
+        // e.g. for res.partner.ref_companies we have the ID of company 1 in:
+        // $response['params']['param']['value']['array']['data']['value'][0]['array']['data']['value'][0]['int']
+        // The company name is in:
+        // $response['params']['param']['value']['array']['data']['value'][0]['array']['data']['value'][1]['string']
+        //
+        // We need to be able to translate a simpler logical path to that data into the physical path.
+        // Especially problematic is the dropping of levels when arrays have a size of one. So with just one country
+        // in the list, access to the ID above becomes:
+        //
+        // $response['params']['param']['value']['array']['data']['value']['array']['data']['value'][0]['int']
+        //
+        // That needs to be handled as a generic rule, so the higher level functions don't need to account for it.
+
+        return $response;
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace Academe\OpenErpApi;
 
+use Zend;
+
 /**
  * Class XmlRpcClient
  * @package Simbigo\OpenERP
@@ -208,6 +210,12 @@ class XmlRpcClient implements RpcClientInterface
 
         $uri = $this->getHost() . ':' . $this->getPort() . $this->getPath();
 
+        // Make the call through the Zend XML-RPC client.
+        $client = new Zend\XmlRpc\Client($uri);
+        $response = $client->call($method, $params);
+
+        return $response;
+
         $xml = file_get_contents($uri, false, $context);
 
         $this->lastRawResponse = $xml;
@@ -249,6 +257,8 @@ class XmlRpcClient implements RpcClientInterface
 
         $payload .= "\t\t" . '</params>' . "\r\n";
         $payload .= "\t" . '</methodCall>' . "\r\n";
+
+        // Now use PHP's build-in XML-RPC functionality. Or a library?
 
         return $payload;
     }

@@ -32,7 +32,7 @@ class Common extends InterfacesAbstract
         $client = $this->connection->getClient();
         $client->setPath($this->connection->getEntryPoint($this->service));
 
-        $response = $client->call(
+        $uid = $client->call(
             'login',
             array(
                 $this->connection->getDb(),
@@ -40,9 +40,7 @@ class Common extends InterfacesAbstract
                 $this->connection->getPassword(),
             )
         );
-        $this->connection->throwExceptionIfFault($response);
 
-        $uid = (int)$response['params']['param']['value']['int'];
         $this->connection->setUid($uid);
 
         // Set a flag against the connection to indicate whether a connection

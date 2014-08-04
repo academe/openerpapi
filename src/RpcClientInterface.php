@@ -12,4 +12,15 @@ namespace Academe\OpenErpApi;
  */
 interface RpcClientInterface
 {
+    /**
+     * @param $path
+     */
+    public function setPath($path);
+
+    /**
+     * @param $method
+     * @param array $params
+     * @return mixed|\SimpleXMLElement|string
+     */
+    public function call($method, $params = array());
 }
