@@ -61,9 +61,9 @@ Here is a simple example to read a partner record:
 TODO
 ====
 
-* [ ] An interface for the client (the connection class) so a JSON-RPC alternative can be slipped in.
-* [ ] Namespace the exceptions, as they are used heavily.
-* [ ] Take a look at the data formats returned - how much of the deep nesting is needed?
+* [x] An interface for the client (the connection class) so a JSON-RPC alternative can be slipped in.
+* [ ] Better control of exceptions, because not all errors raised by the ERP are actually exceptions.
+* [x] Take a look at the data formats returned - how much of the deep nesting is needed?
 * [ ] Add some handy wrappers for common objects and operations. These are likely to need extending for
   the specific requirements of different projects.
 * [ ] Fix the documentation in src. Move the documentation out of src first.
