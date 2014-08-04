@@ -187,26 +187,10 @@ class XmlRpcClient implements RpcClientInterface
      */
     public function call($method, $params = array())
     {
-        if (function_exists('xmlrpc_encode_request')) {
-            $options = array(
-                'encoding' => $this->getCharset(), 
-                'version' => 'xmlrpc',
-                'escaping' => 'markup',
-            );
-            $payload = xmlrpc_encode_request($method, $params, $options);
-        } else {
-            $payload = $this->encodeRequest($method, $params);
-        }
-
-        $this->lastRequest = $payload;
-
-        $context = stream_context_create(array(
-            'http' => array(
-                'method' => "POST",
-                'header' => $this->getDefaultHeader(),
-                'content' => $payload
-            )
-        ));
+        $this->lastRequest = array(
+            'method' => $method,
+            'params' => $params,
+        );
 
         $uri = $this->getHost() . ':' . $this->getPort() . $this->getPath();
 
@@ -214,131 +198,8 @@ class XmlRpcClient implements RpcClientInterface
         $client = new Zend\XmlRpc\Client($uri);
         $response = $client->call($method, $params);
 
-        return $response;
-
-        $xml = file_get_contents($uri, false, $context);
-
-        $this->lastRawResponse = $xml;
-
-        $response = new \SimpleXMLElement($xml);
-
-        $response = json_encode($response);
-        $response = json_decode($response, true);
+        $this->lastRawResponse = $response;
 
         return $response;
-    }
-
-    /**
-     * @return string
-     */
-    public function getDefaultHeader()
-    {
-        $headers  = "";
-        $headers .= "Content-Type: text/xml\r\n";
-        $headers .= "User-Agent: " . $this->userAgent . "\r\n";
-        return $headers;
-    }
-
-    /**
-     * @param $method
-     * @param array $params
-     * @return string
-     */
-    public function encodeRequest($method, array $params)
-    {
-        $payload = '<?xml version="1.0" encoding="' . $this->getCharset() . '"?>' . "\r\n";
-        $payload .= "\t" . '<methodCall>' . "\r\n";
-        $payload .= "\t\t" . '<methodName>' . $method . '</methodName>' . "\r\n";
-        $payload .= "\t\t" . '<params>' . "\r\n";
-
-        foreach ($params as $param) {
-            $payload .= "<param>\r\n" . $this->encodeParam($param) . "</param>\r\n";
-        }
-
-        $payload .= "\t\t" . '</params>' . "\r\n";
-        $payload .= "\t" . '</methodCall>' . "\r\n";
-
-        // Now use PHP's build-in XML-RPC functionality. Or a library?
-
-        return $payload;
-    }
-
-    /**
-     * @param $param
-     * @return bool|string
-     */
-    public function encodeParam($param)
-    {
-        switch (gettype($param)) {
-            case 'boolean':
-                $encoded = '<value><boolean>' . $param . '</boolean></value>' . "\r\n";
-                break;
-
-            case 'double':
-                $encoded = '<value><double>' . $param . '</double></value>' . "\r\n";
-                break;
-
-            case 'integer':
-                $encoded = '<value><int>' . $param . '</int></value>' . "\r\n";
-                break;
-
-            case 'string':
-                $encoded = '<value><string>' . htmlspecialchars($param) . '</string></value>' . "\r\n";
-                break;
-
-            case 'array':
-                $encoded = $this->encodeArray($param);
-                break;
-
-            default:
-                $encoded = false;
-                break;
-        }
-        return $encoded;
-    }
-
-    /**
-     * @param $array
-     * @return string
-     */
-    private function encodeArray($array)
-    {
-        if ($this->isAssoc($array)) {
-            $encoded = '<struct>' . "\r\n";
-
-            foreach ($array as $key => $value) {
-                $encoded .= '<member>' . "\r\n";
-                $encoded .= '<name>' . $key . '</name>' . "\r\n";
-                $encoded .= $this->encodeParam($value);
-                $encoded .= '</member>' . "\r\n";
-            }
-
-            $encoded .= '</struct>' . "\r\n";
-        } else {
-            $encoded = '<array>' . "\r\n";
-            $encoded .= '<data>' . "\r\n";
-
-            foreach ($array as $value) {
-                $encoded .= $this->encodeParam($value);
-            }
-
-            $encoded .= '</data>' . "\r\n";
-            $encoded .= '</array>' . "\r\n";
-        }
-
-        return $encoded;
-    }
-
-    /**
-     * @param $array
-     * @return bool
-     */
-    private function isAssoc($array)
-    {
-        if (is_array($array) && !is_numeric(array_shift(array_keys($array)))) {
-            return true;
-        }
-
-        return false;
     }
 }
