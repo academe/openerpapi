@@ -3,8 +3,9 @@
 namespace Academe\OpenErpApi;
 
 /**
- * .
- * @package Simbigo\OpenERP
+ * Handles the connection to OpenERP at the application level.
+ * @package Academe\OpenErpApi
+ * @todo Add a root path that can prefix the entry point.
  */
 class Connection implements ConnectionInterface
 {
@@ -29,15 +30,20 @@ class Connection implements ConnectionInterface
     protected $db;
 
     /**
-     * login aka username
      * @var
      */
-    protected $login;
+    protected $username;
 
     /**
      * @var
      */
     protected $password;
+
+    /**
+     * Used if OpenERP is not installed at/running from the root folder of the virtual server.
+     * @var
+     */
+    protected $root_path = '';
 
     /**
      * @var
@@ -47,12 +53,13 @@ class Connection implements ConnectionInterface
     /**
      * The entry points for the static web services.
      * @var
+     * @todo Add methods to manage this list.
      */
     protected $entry_points = array(
         'common' => '/xmlrpc/common',
         'object' => '/xmlrpc/object',
         'db' => '/xmlrpc/db',
-        'report' => 'xmlrpc/report_spool',
+        'report' => '/xmlrpc/report_spool',
     );
 
     /**
@@ -60,13 +67,13 @@ class Connection implements ConnectionInterface
      * @param string $charset
      * @todo initialise with the client object interface
      */
-    public function __construct(RpcClientInterface $client, $database = null, $username = null, $password = null)
+    public function __construct(RpcClientInterface $client)
     {
         $this->setClient($client);
     }
 
     /**
-     * @return client
+     * @return string The entry point path.
      */
     public function getEntryPoint($service)
     {
@@ -75,9 +82,7 @@ class Connection implements ConnectionInterface
             throw new \Exception(sprintf('Entry point for service "$service" not known.', $service));
         }
 
-        $client = $this->getClient();
-
-        return $this->entry_points[$service];
+        return $this->root_path . $this->entry_points[$service];
     }
 
     /**
@@ -127,9 +132,9 @@ class Connection implements ConnectionInterface
     /**
      * @return mixed
      */
-    public function getLogin()
+    public function getUsername()
     {
-        return $this->login;
+        return $this->username;
     }
 
     /**
@@ -167,55 +172,55 @@ class Connection implements ConnectionInterface
     }
 
     /**
+     * @return string
+     */
+    public function getRootPath()
+    {
+        return $this->root_path;
+    }
+
+    /**
+     * @return this
+     */
+    public function setRootPath($root_path)
+    {
+        // To work with the entry point list, needs a leading '/', but no trailing '/'.
+
+        $this->root_path = (trim($root_path, '/') != '' ? '/' . trim($root_path, '/') : '');
+
+        return $this;
+    }
+
+    /**
+     * Set the path for a given service.
+     * @return this
+     */
+    public function setService($service)
+    {
+        $this->setPath($this->getEntryPoint($service));
+    }
+
+    /**
      * @param $db
-     * @param $login
+     * @param $username
      * @param $password
      * @return int
      */
-    public function setCredentials($db, $login, $password)
+    public function setCredentials($db, $username, $password)
     {
-        // Save the login details, because we will need them in subsequent calls.
+        // Save the username details, because we will need them in subsequent calls.
 
         if (isset($db)) $this->db = $db;
-        if (isset($login)) $this->login = $login;
+        if (isset($username)) $this->username = $username;
         if (isset($password)) $this->password = $password;
     }
 
     /**
-     * @param $response
-     * @throws \Exception
+     * Pass any further calls on to the client to handle.
      */
-    public function throwExceptionIfFault($response)
+    public function __call($method, $params)
     {
-        if (isset($response['fault'])) {
-            $faultArray = $response['fault']['value']['struct']['member'];
-            $faultCode = 0;
-            $faultString = 'Undefined fault string';
-
-            foreach ($faultArray as $fault) {
-                if ($fault['name'] == 'faultCode') {
-                    $f = $fault['value'];
-                    if (isset($f['string'])) {
-                        $faultCode = 0;
-                        $faultString = $f['string'];
-                        break;
-                    }
-
-                    if (isset($f['int'])) {
-                        $faultCode = $f['int'];
-                    }
-                }
-
-                if ($fault['name'] == 'faultString') {
-                    $faultString = $fault['value']['string'];
-                }
-            }
-
-            // There is also a full stack track available, and since OpenERP API has very little
-            // validation against what you are trying to do, stack dumps are a very common result
-            // of data errors, unfortunately.
-            throw new \Exception($faultString, $faultCode);
-        }
+        return call_user_func_array(array($this->client, $method), $params);
     }
 }
 

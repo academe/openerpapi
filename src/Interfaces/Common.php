@@ -29,27 +29,21 @@ class Common extends InterfacesAbstract
         // Keep the credentials on the connection for use by other interfaces.
         $this->connection->setCredentials($db, $login, $password);
 
-        $client = $this->connection->getClient();
-        $client->setPath($this->connection->getEntryPoint($this->service));
+        $this->connection->setService($this->service);
 
-        $uid = $client->call(
+        $uid = $this->connection->call(
             'login',
             array(
                 $this->connection->getDb(),
-                $this->connection->getLogin(),
+                $this->connection->getUsername(),
                 $this->connection->getPassword(),
             )
         );
 
         $this->connection->setUid($uid);
 
-        // Set a flag against the connection to indicate whether a connection
-        // has been made or not (i.e. that the credentials are valid). This may
-        // actually be of no use, so prepare to remove it if the connection turns
-        // out to be totally sessionless.
-
         // The assumption is that there is no zero uid.
-        $this->connection->setLoggedIn($uid);
+        $this->connection->setLoggedIn( ! empty($uid));
 
         return $uid;
     }
@@ -62,52 +56,42 @@ class Common extends InterfacesAbstract
      */
     public function getTimezone()
     {
-        $client = $this->connection->getClient();
-        $client->setPath($this->connection->getEntryPoint($this->service));
+        $this->connection->setService($this->service);
 
         $params = array(
             $this->connection->getDb(),
-            $this->connection->getLogin(),
+            $this->connection->getUsername(),
             $this->connection->getPassword(),
         );
 
-        $response = $client->call('timezone_get', $params);
-        $this->connection->throwExceptionIfFault($response);
+        $response = $this->connection->call('timezone_get', $params);
 
-        return $response['params']['param']['value']['string'];
+        return $response;
     }
 
     /**
      * @param bool $extended
      * @return mixed
-     * @todo FIXME - this is not working
      */
-    public function about($extended = false)
+    public function getAbout($extended = false)
     {
-        $client = $this->connection->getClient();
-        $client->setPath($this->connection->getEntryPoint($this->service));
+        $this->connection->setService($this->service);
 
-        $response = $client->call('about', array($extended));
-        $this->connection->throwExceptionIfFault($response);
+        $response = $this->connection->call('about', array($extended));
 
-        return $response['params']['param']['value']['string'];
+        return $response;
     }
 
     /**
      * @return mixed
      */
-    public function version()
+    public function getVersion()
     {
-        $client = $this->connection->getClient();
-        $client->setPath($this->connection->getEntryPoint($this->service));
+        $this->connection->setService($this->service);
 
-        $response = $client->call('version');
-        $this->connection->throwExceptionIfFault($response);
+        $response = $this->connection->call('version');
 
-        $version = $response['params']['param']['value']['struct']['member'][0]['value']['string'];
-        $this->version = $version;
-
-        return $version;
+        return $response;
     }
 }
 

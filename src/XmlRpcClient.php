@@ -6,50 +6,40 @@ use Zend;
 
 /**
  * Class XmlRpcClient
- * @package Simbigo\OpenERP
- * @todo Create an interface for use by multiple clients.
+ * @package Academe\OpenErpApi
+ * @todo Charset is probably irrelevant here now.
  */
 class XmlRpcClient implements RpcClientInterface
 {
     /**
-     * @var 
+     * @var
      */
-    protected $defaultPath = '';
+    protected $host;
+
+    /**
+     * @var
+     */
+    protected $port;
 
     /**
      * @var string
      */
-    public $userAgent = 'Simbigo XML-RPC Client';
-
-    /**
-     * @var
-     */
-    private $_host;
-
-    /**
-     * @var
-     */
-    private $_port;
+    protected $path = '';
 
     /**
      * @var string
      */
-    private $_path = '';
-
-    /**
-     * @var string
-     */
-    private $_charset = 'utf-8';
+    protected $charset = 'utf-8';
 
     /**
      * @var
      */
-    private $lastRawResponse;
+    protected $lastRawResponse;
 
     /**
      * @var
      */
-    private $lastRequest;
+    protected $lastRequest;
 
     /**
      * @param $host
@@ -62,7 +52,8 @@ class XmlRpcClient implements RpcClientInterface
     }
 
     /**
-     * Set all paramters in one go.
+     * Set all parameters in one go. Except the path, which is set per call as it changes
+     * for each interface anyway.
      */
     public function setParams($host = null, $port = null, $charset = null)
     {
@@ -74,19 +65,6 @@ class XmlRpcClient implements RpcClientInterface
             $port = isset($urlInfo['port']) ? $urlInfo['port'] : (isset($port) ? $port : '8069');
 
             $path = isset($urlInfo['path']) ? $urlInfo['path'] : null;
-
-            // If the path is "xmlrpc" then strip it off - we will be adding it
-            // in each entry point path. If the path is not "xmlrpc" then assume
-            // OpenERP is install on a a non-root path, so keep it.
-            // CHECKME: if the path is "/myinstance/xmlrpc" then we probably need to
-            // strip "xmlrpc" from the end.
-            // However, defaultPath is not actually used anywhere, so it's a moot.
-
-            if ($path !== null && trim($path, '/') != 'xmlrpc') {
-                $this->defaultPath = rtrim($path, '/');
-            } else {
-                $this->defaultPath = '';
-            }
 
             $this->setHost($scheme . '://' . $host);
         }
@@ -105,7 +83,7 @@ class XmlRpcClient implements RpcClientInterface
      */
     public function getHost()
     {
-        return $this->_host;
+        return $this->host;
     }
 
     /**
@@ -113,7 +91,7 @@ class XmlRpcClient implements RpcClientInterface
      */
     public function setHost($host)
     {
-        $this->_host = rtrim($host, '/');
+        $this->host = rtrim($host, '/');
     }
 
     /**
@@ -121,7 +99,7 @@ class XmlRpcClient implements RpcClientInterface
      */
     public function setCharset($charset)
     {
-        $this->_charset = $charset;
+        $this->charset = $charset;
     }
 
     /**
@@ -129,7 +107,7 @@ class XmlRpcClient implements RpcClientInterface
      */
     public function getCharset()
     {
-        return $this->_charset;
+        return $this->charset;
     }
 
     /**
@@ -137,7 +115,7 @@ class XmlRpcClient implements RpcClientInterface
      */
     public function getPort()
     {
-        return $this->_port;
+        return $this->port;
     }
 
     /**
@@ -145,7 +123,7 @@ class XmlRpcClient implements RpcClientInterface
      */
     public function setPort($port)
     {
-        $this->_port = (int)$port;
+        $this->port = (int)$port;
     }
 
     /**
@@ -153,7 +131,7 @@ class XmlRpcClient implements RpcClientInterface
      */
     public function getPath()
     {
-        return $this->_path;
+        return $this->path;
     }
 
     /**
@@ -161,7 +139,7 @@ class XmlRpcClient implements RpcClientInterface
      */
     public function setPath($path)
     {
-        $this->_path = $path;
+        $this->path = $path;
     }
 
     /**
@@ -183,7 +161,7 @@ class XmlRpcClient implements RpcClientInterface
     /**
      * @param $method
      * @param array $params
-     * @return mixed|\SimpleXMLElement|string
+     * @return mixed
      */
     public function call($method, $params = array())
     {

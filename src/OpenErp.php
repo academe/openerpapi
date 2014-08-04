@@ -6,7 +6,7 @@ use Pimple\Container;
 
 /**
  * Class OpenERP
- * @package 
+ * @package Academe\OpenErpApi
  * @todo The lazy-loading parameters - are they just a silly idea here? They only work when
  * the parameters are set before loading any objects.
  */
@@ -96,6 +96,7 @@ class OpenErp
 
     /**
      * Set the client parameters.
+     * Must be set before the client is instantiated.
      */
     public function setClientParams($service_base_uri = null, $port = null, $charset = null)
     {
@@ -169,9 +170,9 @@ class OpenErp
     {
         // The credentials are set in the DIC for lazy-loading.
 
-        if ( isset($database)) $this->container['connection_database'] = $database;
-        if ( isset($username)) $this->container['connection_username'] = $username;
-        if ( isset($password)) $this->container['connection_password'] = $password;
+        if (isset($database)) $this->container['connection_database'] = $database;
+        if (isset($username)) $this->container['connection_username'] = $username;
+        if (isset($password)) $this->container['connection_password'] = $password;
 
         return $this;
     }
@@ -189,6 +190,7 @@ class OpenErp
      */
     public function modelInstance($model_name)
     {
+        // TODO
     }
 }
 

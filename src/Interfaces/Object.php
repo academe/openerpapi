@@ -37,7 +37,7 @@ class Object extends InterfacesAbstract
      * @param $method string The method to call.
      * @param mixed Additional parameters that will be passed to the method as positional parameters.
      */
-    public function execute($model, $method)
+    public function execute($model, $method) // [, ...]
     {
         // If not logged in, then log in automatically (use the DIC to get access to common/login).
         // Dp this first, before setting the service entry point as the entry point could get changed
@@ -45,13 +45,10 @@ class Object extends InterfacesAbstract
 
         $this->checkLogin();
 
-        // Get the connection client.
-
-        $client = $this->connection->getClient();
-        $client->setPath($this->connection->getEntryPoint($this->service));
+        // Set the object service path.
+        $this->connection->setService($this->service);
 
         // Set the common parameters.
-
         $params = array(
             $this->connection->getDb(),
             $this->connection->getUid(),
@@ -66,11 +63,7 @@ class Object extends InterfacesAbstract
         }
 
         // Call the remote system.
-        $response = $client->call('execute', $params);
-
-        // Turn any errors returned by the remote call into exceptions.
-        // We may not always want to do this, so we'll keep an eye on it.
-        $this->connection->throwExceptionIfFault($response);
+        $response = $this->connection->call('execute', $params);
 
         return $response;
     }
@@ -84,7 +77,7 @@ class Object extends InterfacesAbstract
     {
         $response = $this->execute($model, 'create', $data);
 
-        return (int)$response['params']['param']['value']['int'];
+        return $response;
     }
 
     /**
@@ -98,30 +91,7 @@ class Object extends InterfacesAbstract
     {
         $response = $this->execute($model, 'search', $data, $offset, $limit);
 
-        $response = $response['params']['param']['value']['array']['data'];
-
-        if ( ! isset($response['value'])) {
-            return array();
-        }
-
-        $ids = array();
-        $response = $response['value'];
-
-        // Another example of the returned structure being slightly different when
-        // a single match is returned, compared to multiple matches.
-        // I love these traps that leave us scratching our heads for hours. Why a
-        // set of one record should be handled differently than a set of two records,
-        // I will never know.
-
-        if (count($response) == 1) {
-            $ids[] = (int)$response['int'];
-        } else {
-            foreach ($response as $value) {
-                $ids[] = (int)$value['int'];
-            }
-        }
-
-        return $ids;
+        return $response;
     }
 
     /**
@@ -160,7 +130,6 @@ class Object extends InterfacesAbstract
 
         $ir_criteria = array(
             array('model', '=', $model),
-            //array('complete_name', 'in', $ids),
         );
 
         // To search, we need to split the complete names into modules and names.
@@ -237,8 +206,6 @@ class Object extends InterfacesAbstract
     {
         $response = $this->execute($model, 'write', $ids, $fields);
 
-        $response = (bool)$response['params']['param']['value']['boolean'];
-
         return $response;
     }
 
@@ -250,8 +217,6 @@ class Object extends InterfacesAbstract
     public function unlink($model, $ids)
     {
         $response = $this->execute($model, 'unlink', $ids);
-
-        $response = (bool)$response['params']['param']['value']['boolean'];
 
         return $response;
     }
@@ -379,6 +344,10 @@ class Object extends InterfacesAbstract
             array('model', '=', $model),
         );
 
+        if ( ! is_array($external_ids)) {
+            $external_ids = array($external_ids);
+        }
+
         // To search, we need to split the complete names into modules and names.
 
         $modules = array();
@@ -452,19 +421,11 @@ class Object extends InterfacesAbstract
             $module = $external_id_or_module;
         }
 
-        $response = $this->execute($model, 'get_object_reference', $module, $xml_id);
+        $response = $this->execute($model_name, 'get_object_reference', $module, $xml_id);
 
-        // There are an awful lot of assumptions made here in terms of the data structure
-        // that is returned. There has to be a better way to handle it.
+        // Returns array($model_name, $database_id)
 
-        $response = $response['params']['param']['value']['array']['data']['value'];
-
-        // The ID is the database ID.
-
-        $model = $response[0]['string'];
-        $id = $response[1]['int'];
-
-        return array('model' => $model, 'id' => (int)$id);
+        return $response;
     }
 
     /**
@@ -474,20 +435,6 @@ class Object extends InterfacesAbstract
     public function distinctFieldGet($model, $field, $value, $args = null, $offset = 0, $limit = null)
     {
         $response = $this->execute($model, 'distinct_field_get', $field, $value, $args, $offset, $limit);
-
-        // TODO: enormous long structure to parse here.
-        // e.g. for res.partner.ref_companies we have the ID of company 1 in:
-        // $response['params']['param']['value']['array']['data']['value'][0]['array']['data']['value'][0]['int']
-        // The company name is in:
-        // $response['params']['param']['value']['array']['data']['value'][0]['array']['data']['value'][1]['string']
-        //
-        // We need to be able to translate a simpler logical path to that data into the physical path.
-        // Especially problematic is the dropping of levels when arrays have a size of one. So with just one country
-        // in the list, access to the ID above becomes:
-        //
-        // $response['params']['param']['value']['array']['data']['value']['array']['data']['value'][0]['int']
-        //
-        // That needs to be handled as a generic rule, so the higher level functions don't need to account for it.
 
         return $response;
     }
@@ -501,8 +448,7 @@ class Object extends InterfacesAbstract
     /*
     public function load($model, $fields, $data, $context = null)
     {
-        $client = $this->connection->getClient();
-        $client->setPath($this->connection->getEntryPoint($this->service));
+        $this->connection->setService($this->service);
 
         $params = array(
             $this->connection->getDb(),
@@ -514,11 +460,7 @@ class Object extends InterfacesAbstract
             $data,
         );
 
-        $response = $client->call('execute', $params);
-        $this->connection->throwExceptionIfFault($response);
-
-        return $response;
-        $response = (bool)$response['params']['param']['value']['boolean'];
+        $response = $this->connection->call('execute', $params);
 
         return $response;
     }

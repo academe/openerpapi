@@ -1,11 +1,7 @@
 {
-	"name": "simbigo/openerp-api",
-	"description": "PHP API for OpenERP",
+	"name": "academe/openerpapi",
+	"description": "PHP 5.3 XML-RPC API client for OpenERP V7",
 	"authors": [
-		{
-			"name": "Andrey Bondarev",
-			"email": "bondarew.andrey@gmail.com"
-		},
 		{
 			"name": "Jason Judge",
 			"email": "jason@academe.co.uk"
