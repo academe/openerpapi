@@ -27,13 +27,20 @@ class Partner extends Interfaces\Object
      * Get all invoices for a partner.
      * We probably need a more consistent way of specifying fields and search criteria
      * across similar methods.
+     * Set parnter_id = null to get all invoices the current user can see.
      */
-    public function getInvoices($partner_id)
+    public function getInvoices($partner_id = null)
     {
         $model = 'account.invoice';
 
+        $context = array();
+
+        if (isset($partner_id)) {
+            $context[] = array('partner_id', '=', (int)$partner_id);
+        }
+
         // Get all the partner invoice IDs.
-        $ids = $this->search($model, array(array('partner_id', '=', (int)$partner_id)));
+        $ids = $this->search($model, $context);
 
         // Now get the invoices.
         if (!empty($ids)) {

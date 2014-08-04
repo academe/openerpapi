@@ -23,6 +23,7 @@ abstract class InterfacesAbstract implements InterfacesInterface
 
     /**
      * Need a connection to talk to the OpenERP API.
+     * It might be better to pass the DIC in instead.
      */
     public function __construct(OpenErpApi\ConnectionInterface $connection)
     {

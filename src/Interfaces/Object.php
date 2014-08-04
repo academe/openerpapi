@@ -12,6 +12,10 @@ use Academe\OpenErpApi;
  * something to do with the way parameters are passed back out by reference.
  * The first three parameters are always: database, uid, password
  * @package Simbigo\OpenERP
+ *
+ * Many of these methods can be found in openerp/osv/orm.py
+ * Use the execute() method directly to access methods that are not listed here, or are specific
+ * to the model being accessed.
  */
 class Object extends InterfacesAbstract
 {
@@ -435,6 +439,22 @@ class Object extends InterfacesAbstract
     public function distinctFieldGet($model, $field, $value, $args = null, $offset = 0, $limit = null)
     {
         $response = $this->execute($model, 'distinct_field_get', $field, $value, $args, $offset, $limit);
+
+        return $response;
+    }
+
+    /**
+     * Test to see if a list of records exist.
+     * All records, by database ID, that do exist, will be returned in an array.
+     * Those that do not exist for the model, will not be returned.
+     */
+    public function exists($model, $ids)
+    {
+        if ( ! is_array($ids)) {
+            $ids = array($ids);
+        }
+
+        $response = $this->execute($model, 'exists', $ids);
 
         return $response;
     }
