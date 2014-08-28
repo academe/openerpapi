@@ -92,6 +92,12 @@ class OpenErp
         $this->container['interface_report'] = function ($c) {
             return new $c['interface_report_class']($c['connection']);
         };
+
+        // Generic App/Model instantiation.
+
+        $this->container['app_model'] = function ($c) {
+            return new \Academe\OpenErpApi\App\Partner($c['connection']);
+        };
     }
 
     /**
@@ -188,9 +194,23 @@ class OpenErp
     /**
      * Return a new instance of a model.
      */
-    public function modelInstance($model_name)
+    public function getModelInstance($name)
     {
-        // TODO
+        //$model_name = 'app_model_' . strtolower($name);
+        //return $this->container['app_model'];
+
+        // So far as I am see, Pimple does not support instantiation parameters,
+        // so we will create the new class right here.
+
+        $fqcn_name = '\\Academe\\OpenErpApi\\App\\' . $name;
+
+        $class = new $fqcn_name($this->container['connection']);
+
+        // Think this through a bit. Maybe just pass in the container
+        // and not the connnection explicitly.
+        $class->setContainer($this->container);
+
+        return $class;
     }
 }
 

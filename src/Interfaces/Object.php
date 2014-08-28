@@ -129,6 +129,10 @@ class Object extends InterfacesAbstract
      */
     public function readExternal($model, $ids, $fields = array())
     {
+        if ( ! is_array($ids)) {
+            $ids = array($ids);
+        }
+
         // Get the basic criteria.
         // The localisation will be set to the current user's localisation.
 
