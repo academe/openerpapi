@@ -73,6 +73,25 @@ class Object extends InterfacesAbstract
     }
 
     /**
+     * Magic method for execute().
+     * Call $object->method($model [, params ...])
+     */
+    public function __call($method, $params)
+    {
+        // Take the model off the front of the params.
+        $model = array_shift($params);
+
+        // Insert the method as the second element.
+        array_unshift($params, $method);
+
+        // Put the model back on.
+        array_unshift($params, $model);
+
+        // Invoke the execute method.
+        return call_user_func_array([$this, 'execute'], $params);
+    }
+
+    /**
      * @param $model
      * @param $data
      * @return int
@@ -418,6 +437,7 @@ class Object extends InterfacesAbstract
      * Get the model and database ID for a record identified by an external ID.
      * @todo Catch exception "No such external ID currently defined in the system".
      * There is also a get_object() method that may provide more detail, saving a second call to get the record.
+     * TODO: rename to getExternalId()
      */
     public function getObjectReference($external_id_or_module, $xml_id = null)
     {

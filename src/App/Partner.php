@@ -51,14 +51,14 @@ class Partner extends Interfaces\Object
         }
         $invoice_type = str_replace('{type}', $type, $invoice_type);
 
-        if (isset($partner_id)) {
-            $context[] = array('partner_id', '=', (int)$partner_id);
-            if (isset($state)) $context[] = array('state', '=', strtolower($state));
-            // type is:
-            // 'out_invoice' (Invoice), 'out_refund' (Refund),
-            // 'in_invoice' (Supplier Invoice), 'in_refund' (Supplier Refund).
-            $context[] = array('type', 'like', $invoice_type);
-        }
+        if (isset($partner_id)) $context[] = array('partner_id', '=', (int)$partner_id);
+
+        if (isset($state)) $context[] = array('state', '=', strtolower($state));
+
+        // type is:
+        // 'out_invoice' (Invoice), 'out_refund' (Refund),
+        // 'in_invoice' (Supplier Invoice), 'in_refund' (Supplier Refund).
+        $context[] = array('type', 'like', $invoice_type);
 
         // Get all the partner invoice IDs.
         $ids = $this->search($model, $context);
