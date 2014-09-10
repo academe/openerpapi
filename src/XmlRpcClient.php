@@ -2,7 +2,8 @@
 
 namespace Academe\OpenErpApi;
 
-use Zend;
+use fXmlRpc;
+use fXmlRpc\Exception as RpcException;
 
 /**
  * Class XmlRpcClient
@@ -172,9 +173,19 @@ class XmlRpcClient implements RpcClientInterface
 
         $uri = $this->getHost() . ':' . $this->getPort() . $this->getPath();
 
-        // Make the call through the Zend XML-RPC client.
-        $client = new Zend\XmlRpc\Client($uri);
-        $response = $client->call($method, $params);
+        // Make the call through the fast-XmlRpc client.
+        $client = new fXmlRpc\Client($uri);
+
+        try {
+            $response = $client->call($method, $params);
+        } catch (RpcException\ResponseException $e) {
+            // Get the details of the error, and pass it on.
+            // We don't have a response, so can't return with anything sensible.
+            // Here we just concatenate the faultCode and the faultString, since in practice both of
+            // them seeto be string and either of them can contain the error message.
+
+            throw new RpcException\ResponseException(trim($e->getFaultCode() . ' ' . $e->getFaultString()), $e->getCode(), $e);
+        }
 
         $this->lastRawResponse = $response;
 
