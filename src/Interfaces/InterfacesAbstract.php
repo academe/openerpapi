@@ -49,15 +49,26 @@ abstract class InterfacesAbstract implements InterfacesInterface
     }
 
     /**
+     * Check if logged in.
+     */
+    public function isLoggedIn()
+    {
+        return $this->connection->isLoggedIn();
+    }
+
+    /**
      * Log in if not already logged in.
+     * This is called before any API method is called, as a kind of
+     * lazy login approach.
      */
     public function checkLogin()
     {
-        if ($this->connection->isLoggedIn()) {
+        if ($this->isLoggedIn()) {
             // Already logged in.
             return $this->connection->getUid();
         }
 
+        // Not logged in - do so now.
         $common = $this->container['interface_common'];
         return $common->login();
     }

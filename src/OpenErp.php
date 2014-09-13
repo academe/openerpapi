@@ -15,6 +15,8 @@ class OpenErp
     /**
      * DI container - Pimple 3.
      * This holds the routes and parameters to everthing within this package.
+     * Use of Pimple internally is a kind of an experiment for me. The idea is
+     * to try to make the class structure a little more flexible.
      */
 
     protected $container;
@@ -192,7 +194,8 @@ class OpenErp
     }
 
     /**
-     * Return a new instance of a model.
+     * Return a new instance of a model (actually, more a business model).
+     * This method name may be changed to make more sense.
      */
     public function getModelInstance($name)
     {
