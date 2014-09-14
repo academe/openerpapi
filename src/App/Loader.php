@@ -2,7 +2,7 @@
 
 namespace Academe\OpenErpApi\App;
 
-use Opwall\OpenErp\Api as ErpApi;
+use Academe\OpenErpApi\OpenErp;
 
 /**
  * Used as a helper for loading CSV data into models.
@@ -22,7 +22,7 @@ use Opwall\OpenErp\Api as ErpApi;
  * moreinfo can range from a string message to complex nested arrays.
  */
 
-class Loader extends Interfaces\Object
+class Loader extends \Academe\OpenErpApi\Interfaces\Object
 {
     /**
      * A general low-level data load.
@@ -31,11 +31,9 @@ class Loader extends Interfaces\Object
      * param $keys array An array of key (field) names.
      * param $records array An array of records. Each record is an array of field values.
      */
-    public function load($model, $keys, $records)
+    public function loadRaw($model, $keys, $records)
     {
-        $object = ErpApi::getInterface('object');
-
-        return $object->load($model, $keys, $records);
+        return $this->load($model, $keys, $records);
     }
 
     /**
@@ -49,19 +47,23 @@ class Loader extends Interfaces\Object
 
         if ( ! isset($record)) {
             $record = array_values($keys_or_record);
-            $keys_or_record = array_keys($keys_or_record);
+            $keys = array_keys($keys_or_record);
+        } else {
+            $keys = $keys_or_record;
         }
 
         try {
             $response = $this->load($model, $keys, [$record]);
         } catch (\Exception $e) {
             // Create a fake response.
-            $response = [];
-            throw $e;
+            $response = ['messages' => [], 'ids' => false];
+            //throw $e; // Throw the exception for dev, so we can see what type of exceptions there are.
         }
 
-        // TODO: decide what to return.
-        // ...
+        // Return the result.
+        // TODO: put this in the DIC for convenience.
+        $record_result = new LoaderRecordResult();
+        return $record_result->setResult($response);
     }
 }
 

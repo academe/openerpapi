@@ -205,7 +205,7 @@ class OpenErp
         // So far as I am see, Pimple does not support instantiation parameters,
         // so we will create the new class right here.
 
-        $fqcn_name = '\\Academe\\OpenErpApi\\App\\' . $name;
+        $fqcn_name = '\\Academe\\OpenErpApi\\App\\' . ucfirst($name);
 
         $class = new $fqcn_name($this->container['connection']);
 
