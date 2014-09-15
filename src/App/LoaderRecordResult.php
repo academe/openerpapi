@@ -73,5 +73,22 @@ class LoaderRecordResult
 
         return $messages;
     }
+
+    /**
+     * Return the ID of the loaded record.
+     * false if no record was successfuly loaded.
+     */
+    public function getId()
+    {
+        return $this->record_id;
+    }
+
+    /**
+     * Return the raw result array.
+     */
+    public function getRawResult()
+    {
+        return $this->result_source;
+    }
 }
 
