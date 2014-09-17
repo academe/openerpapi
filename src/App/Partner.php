@@ -104,10 +104,13 @@ class Partner extends Interfaces\Object
     }
 
     /**
+     * TODO: Move this out, as it is project-specific.
      * Return the ERP external ID that a partner (customer) would have,
      * given the CRM contact's or account's number.
      * $number is the contact or account number
      * $type is "account" or "contact".
+     *
+     * @deprecated
      */
     public function externalId($number, $type = 'contact')
     {
