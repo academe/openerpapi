@@ -28,8 +28,9 @@ class OpenErp
     const DEFAULT_CHARSET = 'utf-8';
     const DEFAULT_PORT = '8069';
 
-    const CLIENT_CLASS = 'Academe\\OpenErpApi\\XmlRpcClient';
-    const CONNECTION_CLASS = 'Academe\\OpenErpApi\\Connection';
+    // These constant default classes are probably better implemented as methods.
+    // As methods, they can be controlled more dynamically or by configuration, rather
+    // than by overriding this class.
 
     // Note Interfaces is plural because Interface is a reserved word.
     const INTERFACE_COMMON_CLASS = 'Academe\\OpenErpApi\\Interfaces\\Common';
@@ -47,27 +48,27 @@ class OpenErp
 
         // The client service name and some default parameters.
         $this->container['client_base_uri'] = '';
-        $this->container['client_class'] = static::CLIENT_CLASS;
         $this->container['client_charset'] = static::DEFAULT_CHARSET;
         $this->container['client_port'] = static::DEFAULT_PORT;
 
         // The shared client service.
         $this->container['client'] = function ($c) {
-            return new $c['client_class']($c['client_base_uri'], $c['client_port'], $c['client_charset']);
+            return $this->newClient($c['client_base_uri'], $c['client_port'], $c['client_charset']);
         };
 
         // The shared connection service name and parameters.
-        $this->container['connection_class'] = static::CONNECTION_CLASS;
         $this->container['connection_database'] = null;
         $this->container['connection_username'] = null;
         $this->container['connection_password'] = null;
 
         // The shared connection service.
         $this->container['connection'] = function ($c) {
-            $connection = new $c['connection_class']($c['client']);
-            $connection->setCredentials($c['connection_database'], $c['connection_username'], $c['connection_password']);
-
-            return $connection;
+            return $this->newConnection(
+                $c['client'],
+                $c['connection_database'],
+                $c['connection_username'],
+                $c['connection_password']
+            );
         };
 
         // The various interface services.
@@ -77,29 +78,38 @@ class OpenErp
         $this->container['interface_db_class'] = static::INTERFACE_DB_CLASS;
         $this->container['interface_report_class'] = static::INTERFACE_REPORT_CLASS;
 
-        // TODO: can these be gerated in a loop?
+        // Set up the instantiation functions of the four interfaces.
 
-        $this->container['interface_common'] = function ($c) {
-            return new $c['interface_common_class']($c['connection']);
-        };
-
-        $this->container['interface_object'] = function ($c) {
-            return new $c['interface_object_class']($c['connection']);
-        };
-
-        $this->container['interface_db'] = function ($c) {
-            return new $c['interface_db_class']($c['connection']);
-        };
-
-        $this->container['interface_report'] = function ($c) {
-            return new $c['interface_report_class']($c['connection']);
-        };
+        foreach(['common', 'object', 'db', 'report'] as $interface_name) {
+            $this->container['interface_' . $interface_name] = function ($c) use($interface_name) {
+                return new $c['interface_' . $interface_name . '_class']($c['connection']);
+            };
+        }
 
         // Generic App/Model instantiation.
 
         $this->container['app_model'] = function ($c) {
-            return new \Academe\OpenErpApi\App\Partner($c['connection']);
+            return new App\Partner($c['connection']);
         };
+    }
+
+    /**
+     * Instantiate a client object.
+     */
+    public function newClient($client_base_uri, $client_port, $client_charset)
+    {
+        return new XmlRpcClient($client_base_uri, $client_port, $client_charset);
+    }
+
+    /**
+     * Instantiate a connection object.
+     */
+    public function newConnection($client, $connection_database, $connection_username, $connection_password)
+    {
+            $connection = new Connection($client);
+            $connection->setCredentials($connection_database, $connection_username, $connection_password);
+
+            return $connection;
     }
 
     /**
@@ -122,7 +132,7 @@ class OpenErp
         // Set lazy-loading parameters.
         $this->setClientParams($service_base_uri, $port, $charset);
 
-        // Get the client from the DIC.
+        // Get the client from the DIC, which will instantiate if necessary.
         $client = $this->container['client'];
 
         // Set the container parameters directly in case it was already instantiated

@@ -184,6 +184,9 @@ class XmlRpcClient implements RpcClientInterface
             // Here we just concatenate the faultCode and the faultString, since in practice both of
             // them seeto be string and either of them can contain the error message.
 
+            // TODO: store these error parts separately, so they are available later on.
+            // Or maybe just don't catch it? Think it through.
+
             throw new RpcException\ResponseException(trim($e->getFaultCode() . ' ' . $e->getFaultString()), $e->getCode(), $e);
         }
 

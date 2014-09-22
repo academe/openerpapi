@@ -66,6 +66,11 @@ class Object extends InterfacesAbstract
             $params = array_merge($params, array_slice(func_get_args(), 2));
         }
 
+        // This is a good point to put a debug call in to capture what is being
+        // sent to the server. A logging object can be added to the DIC, with perhaps
+        // a dummy object for production. A PSR-3 Psr\Log\LoggerInterface would be a
+        // nice move.
+
         // Call the remote system.
         $response = $this->connection->call('execute', $params);
 
