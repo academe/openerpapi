@@ -482,32 +482,5 @@ class Object extends InterfacesAbstract
 
         return $response;
     }
-
-    /**
-     * @param $model
-     * @param $ids
-     * @param $fields
-     * @return bool|mixed|\SimpleXMLElement|string
-     */
-    /*
-    public function load($model, $fields, $data, $context = null)
-    {
-        $this->connection->setService($this->service);
-
-        $params = array(
-            $this->connection->getDb(),
-            $this->connection->getUid(),
-            $this->connection->getPassword(),
-            $model,
-            'load',
-            $fields,
-            $data,
-        );
-
-        $response = $this->connection->call('execute', $params);
-
-        return $response;
-    }
-    */
 }
 

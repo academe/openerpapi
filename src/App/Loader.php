@@ -55,8 +55,22 @@ class Loader extends \Academe\OpenErpApi\Interfaces\Object
         try {
             $response = $this->load($model, $keys, [$record]);
         } catch (\Exception $e) {
-            // Create a fake response.
-            $response = ['messages' => [], 'ids' => false];
+            // Create a fake response, including the exception raised as a
+            // "_internal_" field.
+            // This will often be a Python error, uncaught on the OpenERP server and
+            // raised as an API exception in the Connection. It is needed for debugging,
+            // but the _underscores_ should differentiate it from any normal model object
+            // fields.
+
+            $response = [
+                'messages' => [
+                    [
+                        'field' => '_internal_',
+                        'message' => $e->getMessage()
+                    ]
+                ],
+                'ids' => false
+            ];
             //throw $e; // Throw the exception for dev, so we can see what type of exceptions there are.
         }
 
