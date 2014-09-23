@@ -184,6 +184,12 @@ class XmlRpcClient implements RpcClientInterface
             // Here we just concatenate the faultCode and the faultString, since in practice both of
             // them seeto be string and either of them can contain the error message.
 
+            // CHECKME: if we get $e->getFaultCode() == 'AccessDenied' then we have possibly
+            // been logged out. It may be worth checking the authentication status and setting
+            // the session as logged out. However, AccessDenied may be a more general error that
+            // is applied to individual models and not just the whole login session. There will be
+            // a way to check though.
+
             // TODO: store these error parts separately, so they are available later on.
             // Or maybe just don't catch it? Think it through.
 

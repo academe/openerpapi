@@ -3,6 +3,7 @@
 namespace Academe\OpenErpApi\Interfaces;
 
 use Academe\OpenErpApi;
+use fXmlRpc\Exception as RpcException;
 
 /**
  * Access to the "common" interface.
@@ -31,14 +32,20 @@ class Common extends InterfacesAbstract
 
         $this->connection->setService($this->service);
 
-        $uid = $this->connection->call(
-            'login',
-            array(
-                $this->connection->getDb(),
-                $this->connection->getUsername(),
-                $this->connection->getPassword(),
-            )
-        );
+        try {
+            $uid = $this->connection->call(
+                'login',
+                array(
+                    $this->connection->getDb(),
+                    $this->connection->getUsername(),
+                    $this->connection->getPassword(),
+                )
+            );
+        } catch (RpcException\ResponseException $e) {
+            // An invalid login can raise an exception. Similarly for any
+            // other API call when the password has been changed after logging in.
+            $uid = 0;
+        }
 
         $this->connection->setUid($uid);
 
