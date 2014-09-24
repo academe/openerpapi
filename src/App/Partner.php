@@ -41,12 +41,12 @@ class Partner extends Interfaces\Object
 
         $invoice_type = '{direction}_{type}';
 
-        if ( ! isset($direction) || $direction != 'in' || $direction != 'out') {
+        if ( ! isset($direction) || ($direction != 'in' && $direction != 'out')) {
             $direction = '%';
         }
         $invoice_type = str_replace('{direction}', $direction, $invoice_type);
 
-        if ( ! isset($type) || $type != 'invoice' || $type != 'refund') {
+        if ( ! isset($type) || ($type != 'invoice' && $type != 'refund')) {
             $type = '%';
         }
         $invoice_type = str_replace('{type}', $type, $invoice_type);
