@@ -34,7 +34,7 @@ class OpenErp
 
     // Note Interfaces is plural because Interface is a reserved word.
     const INTERFACE_COMMON_CLASS = 'Academe\\OpenErpApi\\Interfaces\\Common';
-    const INTERFACE_OBJECT_CLASS = 'Academe\\OpenErpApi\\Interfaces\\Object';
+    const INTERFACE_OBJECT_CLASS = 'Academe\\OpenErpApi\\Interfaces\\OdooObject';
     const INTERFACE_DB_CLASS = 'Academe\\OpenErpApi\\Interfaces\\Db';
     const INTERFACE_REPORT_CLASS = 'Academe\\OpenErpApi\\Interfaces\\Report';
 

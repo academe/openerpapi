@@ -1,22 +1,24 @@
 {
-	"name": "academe/openerpapi",
-	"description": "PHP 5.3 XML-RPC API client for OpenERP V7",
-	"authors": [
-		{
-			"name": "Jason Judge",
-			"email": "jason@academe.co.uk"
-		}
-	],
-	"license": "MIT",
-	"require": {
-		"php": ">=5.3.0",
-		"pimple/pimple": "~3.0",
-		"lstrojny/fxmlrpc": "~0.9"
-	},
-	"autoload": {
-		"psr-4": {
-			"Academe\\OpenErpApi\\": "src/"
-		}
-	}
+    "name": "academe/openerpapi",
+    "description": "PHP 5.3 XML-RPC API client for OpenERP V7",
+    "authors": [
+        {
+            "name": "Jason Judge",
+            "email": "jason@academe.co.uk"
+        }
+    ],
+    "license": "MIT",
+    "require": {
+        "php": ">= 7.0.0",
+        "pimple/pimple": "~3.0",
+        "lstrojny/fxmlrpc": "~0.9",
+        "php-http/message": "^1.6",
+        "moneyphp/money": "^3.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Academe\\OpenErpApi\\": "src/"
+        }
+    }
 }
 

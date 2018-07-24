@@ -2,8 +2,8 @@
 
 namespace Academe\OpenErpApi\App;
 
-use Academe\OpenErpApi\Interfaces;
-use config;
+use Academe\OpenErpApi\Interfaces\OdooObject;
+use Config; // <-- Laravel thing, remove it!
 
 /**
  * Business processes concerning partners (individuals and organisations) information.
@@ -14,7 +14,7 @@ use config;
  * extending, we do have access to the connection and can reuse that to launch new
  * interfaces.
  */
-class Partner extends Interfaces\Object
+class Partner extends OdooObject
 {
     /**
      * Get the list of titles (salutations) that can be assigned to individuals.
@@ -41,7 +41,7 @@ class Partner extends Interfaces\Object
 
         $invoice_type = '{direction}_{type}';
 
-        if ( ! isset($direction) || ($direction != 'in' && $direction != 'out')) {
+        if (! isset($direction) || ($direction != 'in' && $direction != 'out')) {
             $direction = '%';
         }
         $invoice_type = str_replace('{direction}', $direction, $invoice_type);
@@ -150,4 +150,3 @@ class Partner extends Interfaces\Object
         }
     }
 }
-

@@ -17,7 +17,7 @@ use Academe\OpenErpApi;
  * Use the execute() method directly to access methods that are not listed here, or are specific
  * to the model being accessed.
  */
-class Object extends InterfacesAbstract
+class OdooObject extends InterfacesAbstract
 {
     /**
      * The service name
