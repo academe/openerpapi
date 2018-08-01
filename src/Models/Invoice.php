@@ -180,4 +180,17 @@ class Invoice
 
         return $type;
     }
+
+    /**
+     * The partner being invoiced (for "out" invoices or refunds).
+     */
+    public function getPartnerId()
+    {
+        return $this->getItem('partner_id.0');
+    }
+
+    public function getPartnerName()
+    {
+        return $this->getItem('partner_id.1');
+    }
 }
