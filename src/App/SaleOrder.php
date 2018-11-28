@@ -8,6 +8,8 @@ use Academe\OpenErpApi\Interfaces\OdooObject;
  * Business processes concerning partners (individuals and organisations) information.
  * @package 
  * @todo Think about how a business object could extend or use multiple interfaces.
+ *
+ * Note: still in development
  */
 class SaleOrder extends OdooObject
 {
@@ -18,7 +20,7 @@ class SaleOrder extends OdooObject
         $context = [];
 
         //$context[] = ['booking_number', '=', '22675'];
-        $context[] = ['booking_number', '=', '12345'];
+        //$context[] = ['booking_number', '=', '12345'];
 
         //$ids = $this->search($this->model, $context);
         $ids = $this->search('account.invoice', $context);
