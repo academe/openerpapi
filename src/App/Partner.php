@@ -140,7 +140,7 @@ class Partner extends OdooObject
         // This actually fetches the partner, given its ID, in order to get its ID. There is
         // a note in that method about splitting it into two stages.
 
-        $object = \Opwall\OpenErp\Api::getInterface('object');
+        $object = \App\Opwall\OpenErp\Api::getInterface('object');
         $item = $object->readExternal('res.partner', $external_id, array('id'));
 
         if (isset($item[0]['id'])) {
