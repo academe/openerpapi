@@ -2,6 +2,7 @@
 
 namespace Academe\OpenErpApi\App;
 
+use Academe\OpenErpApi\Interfaces\OdooObject;
 use Academe\OpenErpApi\OpenErp;
 
 /**
@@ -22,7 +23,7 @@ use Academe\OpenErpApi\OpenErp;
  * moreinfo can range from a string message to complex nested arrays.
  */
 
-class Loader extends \Academe\OpenErpApi\Interfaces\Object
+class Loader extends OdooObject
 {
     /**
      * A general low-level data load.
