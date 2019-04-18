@@ -64,10 +64,10 @@ class LoaderRecordResult
         }
 
         foreach($this->result_source['messages'] as $message) {
-            // TODO: decipher more of the array to provide useful information.
             $messages[] = array(
-                'field' => $message['field'],
-                'message' => $message['message'],
+                'field' => $message['field'] ?? 'unknown',
+                'message' => $message['message'] ?? 'unknown',
+                'full' => json_encode($message),
             );
         }
 
